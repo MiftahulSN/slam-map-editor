@@ -83,7 +83,7 @@ Demo maps are included in the `assets/maps` folder.
 
 ## 📦 Output
 
-The app produces **two** separate outputs, you need both for a complete Nav2 setup.
+The app provides **three** download options:
 
 ### `Download Map` 🗺️
 Exports the **edited base map** as `map_edited.pgm` + `map_edited.yaml`
@@ -93,11 +93,120 @@ Exports the **edited base map** as `map_edited.pgm` + `map_edited.yaml`
 - Used by Nav2's `map_server`
 
 ### `Download Semantic Mask` 🎨
-Exports the **semantic overlay** as `map_semantic.pgm` + `map_semantic.yaml`
+Exports all filter zones combined as `semantic_mask.pgm` + `semantic_mask.yaml`
 
 - All filter zones (keepout, speed, stairs, guidance) in one PGM file
 - Pixel values encode zone types (see encoding table below)
-- Used by Nav2's `costmap_filter` plugins
+- Requires a custom Nav2 plugin to parse the combined values
+
+### `Download Individual Filter Masks` 📋
+Click the dropdown arrow next to **Download Semantic Mask** to export each filter as a separate PGM + YAML:
+
+| Download | Files | Nav2 Plugin |
+|---|---|---|
+| Keepout Only | `keepout_mask.pgm` + `keepout_mask.yaml` | `keepout_filter` (built-in) |
+| Speed Only | `speed_mask.pgm` + `speed_mask.yaml` | `speed_filter` (built-in) |
+| Stairs Only | `stairs_mask.pgm` + `stairs_mask.yaml` | `stair_zone_filter` (custom) |
+| Guidance Only | `guidance_mask.pgm` + `guidance_mask.yaml` | `guidance_filter` (custom) |
+
+Each individual mask contains **only its zone type** — all other pixels are set to the "free" value for that filter. This allows direct use with Nav2's built-in keepout and speed filters without any custom code.
+
+---
+
+## 🧩 Nav2 Configuration
+
+### Keepout Mask
+
+The `keepout_mask.pgm` uses standard occupancy encoding compatible with Nav2's built-in `keepout_filter`:
+
+| PGM Pixel | Meaning |
+|:---:|---|
+| `0` | Keepout zone (blocked) |
+| `254` | Free (passable) |
+
+The exported `keepout_mask.yaml` uses default map settings (`mode: trinary`). No special configuration is needed — point the filter to the mask and it works.
+
+<details>
+<summary>📋 Nav2 parameter example</summary>
+
+```yaml
+# costmap_filter_info_publisher for keepout
+costmap_filter_info_publisher:
+  ros__parameters:
+    type: 0  # KEEPOUT
+    filter_info_topic: "keepout_costmap_filter_info"
+    mask_topic: "/keepout_filter_mask"
+    base: 0.0
+    multiplier: 1.0
+
+# keepout filter plugin (add to costmap plugins list)
+keepout_filter:
+  plugin: "nav2_costmap_2d::KeepoutFilter"
+  enabled: True
+  filter_info_topic: "keepout_costmap_filter_info"
+```
+
+</details>
+
+### Speed Mask
+
+The `speed_mask.pgm` uses greyscale encoding where **darker = more speed restriction**:
+
+| PGM Pixel | Speed Limit | Example |
+|:---:|---|---|
+| `255` (white) | No restriction (free) | — |
+| `191` (light grey) | 25% max speed | `191 → OG ~25 → 25×(-1)+100 = 75%` speed limit |
+| `128` (mid grey) | 50% max speed | `128 → OG ~50 → 50×(-1)+100 = 50%` speed limit |
+| `0` (black) | Fully stopped | `0 → OG 100 → 100×(-1)+100 = 0%` speed limit |
+
+The exported `speed_mask.yaml` automatically sets:
+```yaml
+mode: scale          # Required! Default "trinary" will break greyscale values
+occupied_thresh: 1.0 # No thresholding — full range conversion
+free_thresh: 0.0     # No thresholding — full range conversion
+```
+
+In your Nav2 config, set `base: 100.0` and `multiplier: -1.0` for the CostmapFilterInfo publisher. This reverses the OccupancyGrid values so darker pixels produce lower speed limits.
+
+<details>
+<summary>📋 Nav2 parameter example</summary>
+
+```yaml
+# costmap_filter_info_publisher for speed
+costmap_filter_info_publisher:
+  ros__parameters:
+    type: 1  # SPEED
+    filter_info_topic: "speed_costmap_filter_info"
+    mask_topic: "/speed_filter_mask"
+    base: 100.0
+    multiplier: -1.0
+
+# speed filter plugin (add to costmap plugins list)
+speed_filter:
+  plugin: "nav2_costmap_2d::SpeedFilter"
+  enabled: True
+  filter_info_topic: "speed_costmap_filter_info"
+  speed_limit_topic: "speed_limit"
+
+# controller server must subscribe to speed_limit
+controller_server:
+  ros__parameters:
+    speed_limit_topic: "speed_limit"
+```
+
+</details>
+
+> 💡 **Ready-to-use Nav2 parameter files** are available at [MiftahulSN/nav2-filters](https://github.com/MiftahulSN/nav2-filters) — see `params_keepout.yaml` and `params_speed.yaml`.
+
+### Stairs & Guidance Masks
+
+These require custom Nav2 plugins from [MiftahulSN/nav2-filters](https://github.com/MiftahulSN/nav2-filters).
+
+| PGM Pixel | Meaning |
+|:---:|---|
+| `128` | Stairs zone |
+| `160` | Guidance zone |
+| `254` | Free (no action) |
 
 ---
 

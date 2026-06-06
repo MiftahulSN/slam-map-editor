@@ -791,22 +791,53 @@ function buildUpdatedYaml(imageName) {
 $('#btnDownloadMap').on('click', function() {
   if (!pgm || !yamlObj) { alert('Load YAML and PGM first.'); return; }
   var pgmBytes = encodePGM(pgm);
-  var outPgm = pgmName.replace(/\.pgm$/i, '_edited.pgm');
-  var outYaml = (yamlName || 'map.yaml').replace(/\.ya?ml$/i, '_edited.yaml');
+  var outPgm = 'map_edited.pgm';
+  var outYaml = 'map_edited.yaml';
   dlBytes(pgmBytes, outPgm, 'image/x-portable-graymap');
   dlText(buildUpdatedYaml(outPgm), outYaml, 'text/yaml');
 });
+
+function downloadFilterMask(filterType) {
+  if (!pgm || !yamlObj || !semanticMask) { alert('Load YAML and PGM first.'); return; }
+  var len = pgm.width * pgm.height;
+  var pixels = new Uint8ClampedArray(len);
+  var freeVal = (filterType === 'speed') ? 255 : 254;
+  for (var i = 0; i < len; i++) {
+    var zone = S.getSemanticZoneType(semanticMask[i]);
+    if (zone === filterType) {
+      pixels[i] = (filterType === 'speed') ? 255 - Math.round(semanticMask[i] * 255 / 100) : semanticMask[i];
+    } else {
+      pixels[i] = freeVal;
+    }
+  }
+  var m = { magic: 'P5', width: pgm.width, height: pgm.height, maxval: 255, pixels: pixels };
+  var outPgm = filterType + '_mask.pgm';
+  var outYaml = filterType + '_mask.yaml';
+  var y = Object.assign({}, yamlObj, { image: outPgm });
+  if (filterType === 'speed') {
+    y.mode = 'scale';
+    y.occupied_thresh = 1.0;
+    y.free_thresh = 0.0;
+  }
+  dlBytes(encodePGM(m), outPgm, 'image/x-portable-graymap');
+  dlText(jsyaml.dump(y), outYaml, 'text/yaml');
+}
 
 $('#btnDownloadSemantic').on('click', function() {
   if (!pgm || !yamlObj || !semanticMask) { alert('Load YAML and PGM first.'); return; }
   var m = { magic: 'P5', width: pgm.width, height: pgm.height, maxval: 255, pixels: semanticMask };
   var semanticBytes = encodePGM(m);
-  var base = (pgmName || 'map.pgm').replace(/\.pgm$/i, '');
-  var outPgm = base + '_semantic.pgm';
-  var outYaml = base + '_semantic.yaml';
+  var outPgm = 'semantic_mask.pgm';
+  var outYaml = 'semantic_mask.yaml';
   var y = Object.assign({}, yamlObj, { image: outPgm });
   dlBytes(semanticBytes, outPgm, 'image/x-portable-graymap');
   dlText(jsyaml.dump(y), outYaml, 'text/yaml');
 });
+
+$('#dlFilterAll').on('click', function(e) { e.preventDefault(); $('#btnDownloadSemantic').click(); });
+$('#dlFilterKeepout').on('click', function(e) { e.preventDefault(); downloadFilterMask('keepout'); });
+$('#dlFilterSpeed').on('click', function(e) { e.preventDefault(); downloadFilterMask('speed'); });
+$('#dlFilterStairs').on('click', function(e) { e.preventDefault(); downloadFilterMask('stairs'); });
+$('#dlFilterGuidance').on('click', function(e) { e.preventDefault(); downloadFilterMask('guidance'); });
 
 })();

@@ -115,7 +115,20 @@
       <!-- Download Files -->
       <div class="col-auto pb-2">
         <button class="btn btn-sm btn-success" id="btnDownloadMap"><i class="fa fa-download"></i> Download Map</button>
-        <button class="btn btn-sm btn-warning" id="btnDownloadSemantic"><i class="fa fa-download"></i> Download Semantic Mask</button>
+        <div class="btn-group btn-group-sm">
+          <button class="btn btn-warning" id="btnDownloadSemantic"><i class="fa fa-download"></i> Download Semantic Mask</button>
+          <button class="btn btn-warning dropdown-toggle dropdown-toggle-split" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <span class="sr-only">Toggle Dropdown</span>
+          </button>
+          <div class="dropdown-menu" style="background:#2a2a2a;border-color:#555;">
+            <a class="dropdown-item text-light" href="#" id="dlFilterAll"><i class="fa fa-layer-group"></i> All Filters (semantic mask)</a>
+            <div class="dropdown-divider" style="border-color:#444;"></div>
+            <a class="dropdown-item" href="#" id="dlFilterKeepout" style="color:#be3232;"><i class="fa fa-ban"></i> Keepout Only</a>
+            <a class="dropdown-item" href="#" id="dlFilterSpeed" style="color:#beaa28;"><i class="fa fa-tachometer"></i> Speed Only</a>
+            <a class="dropdown-item" href="#" id="dlFilterStairs" style="color:#3278be;"><i class="fa fa-sort-amount-asc"></i> Stairs Only</a>
+            <a class="dropdown-item" href="#" id="dlFilterGuidance" style="color:#28963c;"><i class="fa fa-compass"></i> Guidance Only</a>
+          </div>
+        </div>
       </div>
 
       <div class="col small-note ml-auto text-right pb-2">
