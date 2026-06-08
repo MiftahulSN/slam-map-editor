@@ -32,7 +32,7 @@
 |---|---|---|
 | **Keepout** | 🔴 | Marks impassable zones |
 | **Speed** | 🟡 | Sets speed limit (1–100%) |
-| **Stairs** | 🔵 | Removes obstacle cost in marked area |
+| **Passable** | 🔵 | Removes obstacle cost in marked area |
 | **Guidance** | 🟢 | Marks preferred navigation paths |
 
 ### Controls
@@ -74,7 +74,7 @@ Try the hosted version directly
 Demo maps are included in the `assets/maps` folder.
 
 1. **Load your map** : drag & drop `map.yaml` and `map.pgm` into the drop zone.
-2. **Pick a tool** : Wall, Erase, Un-Scan, Keep-Out, Speed, Stairs, or Guidance.
+2. **Pick a tool** : Wall, Erase, Un-Scan, Keep-Out, Speed, Passable, or Guidance.
 3. **Draw** : use freehand, line, or rectangle mode. Adjust brush size with the slider.
 4. **Speed tool** : set the percentage (1–100%) with the slider before drawing.
 5. **Export** : click `Download Map` or `Download Semantic Mask` when done.
@@ -95,7 +95,7 @@ Exports the **edited base map** as `map_edited.pgm` + `map_edited.yaml`
 ### `Download Semantic Mask` 🎨
 Exports all filter zones combined as `semantic_mask.pgm` + `semantic_mask.yaml`
 
-- All filter zones (keepout, speed, stairs, guidance) in one PGM file
+- All filter zones (keepout, speed, passable, guidance) in one PGM file
 - Pixel values encode zone types (see encoding table below)
 - Requires a custom Nav2 plugin to parse the combined values
 
@@ -106,7 +106,7 @@ Click the dropdown arrow next to **Download Semantic Mask** to export each filte
 |---|---|---|
 | Keepout Only | `keepout_mask.pgm` + `keepout_mask.yaml` | `keepout_filter` (built-in) |
 | Speed Only | `speed_mask.pgm` + `speed_mask.yaml` | `speed_filter` (built-in) |
-| Stairs Only | `stairs_mask.pgm` + `stairs_mask.yaml` | `stair_zone_filter` (custom) |
+| Passable Only | `passable_mask.pgm` + `passable_mask.yaml` | `passable_filter` (custom) |
 | Guidance Only | `guidance_mask.pgm` + `guidance_mask.yaml` | `guidance_filter` (custom) |
 
 Each individual mask contains **only its zone type** — all other pixels are set to the "free" value for that filter. This allows direct use with Nav2's built-in keepout and speed filters without any custom code.
@@ -198,15 +198,40 @@ controller_server:
 
 > 💡 **Ready-to-use Nav2 parameter files** are available at [MiftahulSN/nav2-filters](https://github.com/MiftahulSN/nav2-filters) — see `params_keepout.yaml` and `params_speed.yaml`.
 
-### Stairs & Guidance Masks
+### Passable Mask
 
-These require custom Nav2 plugins from [MiftahulSN/nav2-filters](https://github.com/MiftahulSN/nav2-filters).
+The `passable_mask.pgm` uses inverted encoding so Nav2's map_server produces OccupancyGrid `0` on passable zones (the filter clears cost where OG `== 0`):
 
 | PGM Pixel | Meaning |
 |:---:|---|
-| `128` | Stairs zone |
-| `160` | Guidance zone |
-| `254` | Free (no action) |
+| `254` (white) | Passable zone — filter clears obstacle cost |
+| `0` (black) | Free (no action) |
+
+The exported `passable_mask.yaml` uses default `mode: trinary`. No special configuration is needed.
+
+Requires the custom `passable_filter` plugin from [MiftahulSN/nav2-filters](https://github.com/MiftahulSN/nav2-filters).
+
+### Guidance Mask
+
+The `guidance_mask.pgm` uses the same inverted encoding as passable:
+
+| PGM Pixel | Meaning |
+|:---:|---|
+| `254` (white) | Guidance zone — planner prefers this path |
+| `0` (black) | Free (may become buffer zone) |
+
+The `guidance_filter` plugin raises the cost of cells **surrounding** guidance zones (within a configurable `buffer_radius`), creating a "cost valley" that makes the planner prefer guidance paths without blocking alternatives.
+
+The exported `guidance_mask.yaml` uses default `mode: trinary`. No special configuration is needed.
+
+| Parameter | Default | Description |
+|---|---|---|
+| `buffer_radius` | `5` cells (~0.25m) | BFS expansion around guidance zones |
+| `surround_cost` | `5` | Cost applied to buffer zone cells |
+
+**Global costmap only** — the local costmap is left untouched so the controller can react to dynamic obstacles freely.
+
+Requires the custom `guidance_filter` plugin from [MiftahulSN/nav2-filters](https://github.com/MiftahulSN/nav2-filters).
 
 ---
 
@@ -216,10 +241,10 @@ These require custom Nav2 plugins from [MiftahulSN/nav2-filters](https://github.
 |:---|:---|:---|
 | 🚫 Keepout | Nav2 **built-in** | Works with `keepout_filter` out of the box |
 | ⏱️ Speed | Nav2 **built-in** | Works with `speed_filter` out of the box |
-| 🪜 Stairs | **Custom** plugin | Requires [nav2-filters](https://github.com/MiftahulSN/nav2-filters) |
+| 🪜 Passable | **Custom** plugin | Requires [nav2-filters](https://github.com/MiftahulSN/nav2-filters) (`passable_filter`) |
 | 🧭 Guidance | **Custom** plugin | Requires [nav2-filters](https://github.com/MiftahulSN/nav2-filters) |
 
-> _For the custom **Stairs** and **Guidance** costmap filter plugins_ 
+> _For the custom **Passable** and **Guidance** costmap filter plugins_
 👉 **[MiftahulSN/nav2-filters](https://github.com/MiftahulSN/nav2-filters)**
 
 ---
@@ -232,8 +257,8 @@ The semantic mask is a single PGM file where pixel values represent zone types:
 |:---:|---|:---:|---|
 | `0` | Keepout | 🔴 | Lethal cost — impassable |
 | `1`–`100` | Speed | 🟡 | Speed limit at that percentage |
-| `128` | Stairs | 🔵 | Override cost to free — removes obstacles |
-| `160` | Guidance | 🟢 | Set minimal cost — preferred path |
+| `128` | Passable | 🔵 | Clears obstacle cost — makes area passable |
+| `160` | Guidance | 🟢 | Raises surrounding cost — preferred path |
 | `255` | Free | transparent | No action |
 
 > _Values `101-127`, `129-159`, and `161-254` are reserved for future filters._

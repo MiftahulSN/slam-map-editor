@@ -48,7 +48,7 @@
           <button class="btn btn-outline-light tool-btn" data-tool="unscan" title="Mark as unknown"><i class="fa fa-minus-square-o"></i> Un-Scan</button>
           <button class="btn btn-outline-light tool-btn" data-tool="mask" title="Draw Keepout"><i class="fa fa-ban"></i> Keep-Out</button>
           <button class="btn btn-outline-light tool-btn" data-tool="speed" title="Draw Speed Zone"><i class="fa fa-tachometer"></i> Speed</button>
-          <button class="btn btn-outline-light tool-btn" data-tool="stairs" title="Draw Stairs Zone"><i class="fa fa-sort-amount-asc"></i> Stairs</button>
+          <button class="btn btn-outline-light tool-btn" data-tool="passable" title="Draw Passable Zone"><i class="fa fa-sort-amount-asc"></i> Passable</button>
           <button class="btn btn-outline-light tool-btn" data-tool="guidance" title="Draw Guidance Zone"><i class="fa fa-compass"></i> Guidance</button>
         </div>
       </div>
@@ -88,8 +88,8 @@
           <label class="form-check-label" for="showSpeed"><span style="color:#beaa28">Speed</span></label>
         </div>
         <div class="form-check form-check-inline">
-          <input class="form-check-input" type="checkbox" id="showStairs" checked>
-          <label class="form-check-label" for="showStairs"><span style="color:#3278be">Stairs</span></label>
+          <input class="form-check-input" type="checkbox" id="showPassable" checked>
+          <label class="form-check-label" for="showPassable"><span style="color:#3278be">Passable</span></label>
         </div>
         <div class="form-check form-check-inline">
           <input class="form-check-input" type="checkbox" id="showGuidance" checked>
@@ -125,14 +125,14 @@
             <div class="dropdown-divider" style="border-color:#444;"></div>
             <a class="dropdown-item" href="#" id="dlFilterKeepout" style="color:#be3232;"><i class="fa fa-ban"></i> Keepout Only</a>
             <a class="dropdown-item" href="#" id="dlFilterSpeed" style="color:#beaa28;"><i class="fa fa-tachometer"></i> Speed Only</a>
-            <a class="dropdown-item" href="#" id="dlFilterStairs" style="color:#3278be;"><i class="fa fa-sort-amount-asc"></i> Stairs Only</a>
+            <a class="dropdown-item" href="#" id="dlFilterPassable" style="color:#3278be;"><i class="fa fa-sort-amount-asc"></i> Passable Only</a>
             <a class="dropdown-item" href="#" id="dlFilterGuidance" style="color:#28963c;"><i class="fa fa-compass"></i> Guidance Only</a>
           </div>
         </div>
       </div>
 
       <div class="col small-note ml-auto text-right pb-2">
-        Tip: Choose a target (Paint/Erase/Keep-Out/Speed/Stairs/Guidance), then a shape (Freehand/Line/Rect). Spacebar+Drag to pan. Shift+Scroll to zoom.
+        Tip: Choose a target (Paint/Erase/Keep-Out/Speed/Passable/Guidance), then a shape (Freehand/Line/Rect). Spacebar+Drag to pan. Shift+Scroll to zoom.
       </div>
     </div>
   </div>
@@ -169,7 +169,7 @@
           <div class="spacer"></div>
           <div class="small-note"><span style="color:#be3232">&blacksquare;</span> Keep-Out: impassable zone (PGM&nbsp;0)</div>
           <div class="small-note"><span style="color:#beaa28">&blacksquare;</span> Speed: speed limit zone (PGM&nbsp;1&ndash;100&nbsp;=&nbsp;speed%)</div>
-          <div class="small-note"><span style="color:#3278be">&blacksquare;</span> Stairs: obstacle removal zone (PGM&nbsp;128)</div>
+          <div class="small-note"><span style="color:#3278be">&blacksquare;</span> Passable: obstacle removal zone (PGM&nbsp;128)</div>
           <div class="small-note"><span style="color:#28963c">&blacksquare;</span> Guidance: preferred path zone (PGM&nbsp;160)</div>
           <div class="spacer"></div>
           <div class="small-note mt-3"><i>Based on GyroPalm ROS SLAM Map Editor</i></div>

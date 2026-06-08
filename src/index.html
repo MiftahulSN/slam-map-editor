@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta name="description" content="A web-based map editor for quick editing and saving of SLAM maps with semantic navigation filters for Nav2.">
-	<meta name="keywords" content="online, web, ros, ros2, SLAM, map, editor, robotics, robots, responsive, pgm, semantic, nav2, keepout, speed, guidance">
+	<meta name="keywords" content="online, web, ros, ros2, SLAM, map, editor, robotics, robots, responsive, pgm, semantic, nav2, keepout, speed, passable, guidance">
 	<meta name="author" content="Dominick Lee, MiftahulSN">
     <title>SLAM Map Editor</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
@@ -73,14 +73,14 @@
             <a href="https://github.com/SteveMacenski/slam_toolbox" target="_blank">slam_toolbox</a>.
         </p>
         <p>
-            Easily modify walls, obstacles, keep-out zones, speed limits, stairs zones, guidance paths, and other environmental details. Generates a single semantic PGM mask for Nav2 costmap filters.
+            Easily modify walls, obstacles, keep-out zones, speed limits, passable zones, guidance paths, and other environmental details. Generates a single semantic PGM mask for Nav2 costmap filters.
         </p>
     </div>
 	
     <!-- Demo Video -->
     <div class="container mt-5">
         <h2 class="mb-4 text-center">Demo Video</h2>
-		<style>.embed-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; } .embed-container iframe, .embed-container object, .embed-container embed { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }</style><div class='embed-container'><iframe src='https://www.youtube.com/embed//QZlPkAjfvck' frameborder='0' allowfullscreen></iframe></div>
+		<style>.embed-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; } .embed-container iframe, .embed-container object, .embed-container embed { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }</style><div class='embed-container'><iframe src='https://www.youtube.com/embed/QZlPkAjfvck' frameborder='0' allowfullscreen></iframe></div>
     </div>
 
     <!-- Features -->
@@ -100,7 +100,7 @@
             <div class="col-md-4 text-center mb-4">
                 <i class="fa fa-download"></i>
                 <h5>Easy Export</h5>
-                <p class="lead">Download updated map and semantic PGM+YAML files with keepout, speed, stairs, and guidance zones.</p>
+                <p class="lead">Download updated map and semantic PGM+YAML files with keepout, speed, passable, and guidance zones.</p>
             </div>
         </div>
     </div>
@@ -111,7 +111,7 @@
 		<hr />
         <ol>
             <li>Drag & Drop your <code>map.yaml</code> and <code>map.pgm</code> into the editor.</li>
-            <li>Choose your edit mode: Wall, Erase, Un-Scan, Keep-Out, Speed, Stairs, or Guidance.</li>
+            <li>Choose your edit mode: Wall, Erase, Un-Scan, Keep-Out, Speed, Passable, or Guidance.</li>
             <li>Make your edits with zoom, pan, and brush size controls.</li>
             <li>Download your updated map files when done.</li>
         </ol>

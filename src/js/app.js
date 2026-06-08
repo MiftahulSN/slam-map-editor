@@ -2,7 +2,7 @@
 var S = window.SlamMapEditor;
 var parsePGM = S.parsePGM, encodePGM = S.encodePGM;
 var SEMANTIC_FREE = S.SEMANTIC_FREE, SEMANTIC_KEEPOUT = S.SEMANTIC_KEEPOUT;
-var SEMANTIC_STAIRS = S.SEMANTIC_STAIRS, SEMANTIC_GUIDANCE = S.SEMANTIC_GUIDANCE;
+var SEMANTIC_PASSABLE = S.SEMANTIC_PASSABLE, SEMANTIC_GUIDANCE = S.SEMANTIC_GUIDANCE;
 var getSpeedValue = S.getSpeedValue, getSemanticZoneType = S.getSemanticZoneType, getSemanticColor = S.getSemanticColor;
 
 // ===== State =====
@@ -38,7 +38,7 @@ var filledRect = false;
 // filename helpers
 var isYaml = function(name){ return /\.ya?ml$/i.test(name); };
 var isPgm  = function(name){ return /\.pgm$/i.test(name); };
-var isMaskName = function(name){ return /_(semantic|keepout)\.(pgm|ya?ml)$/i.test(name) || /semantic|keepout/i.test(name); };
+var isMaskName = function(name){ return /_(semantic|keepout|speed|passable|guidance)\.(pgm|ya?ml)$/i.test(name) || /semantic|keepout|speed|passable|guidance/i.test(name); };
 
 $('#filledRect').on('change', function () {
   filledRect = this.checked;
@@ -89,7 +89,7 @@ function updateSpeedControlState() {
   else $('#speedControl').removeClass('active');
 }
 
-['#showKeepout', '#showSpeed', '#showStairs', '#showGuidance'].forEach(function(sel) {
+['#showKeepout', '#showSpeed', '#showPassable', '#showGuidance'].forEach(function(sel) {
   $(sel).on('change', function(){ redrawMask(); });
 });
 
@@ -353,13 +353,13 @@ function redo() {
 
 // ===== Semantic tool helpers =====
 function isSemanticTool() {
-  return tool === 'mask' || tool === 'speed' || tool === 'stairs' || tool === 'guidance';
+  return tool === 'mask' || tool === 'speed' || tool === 'passable' || tool === 'guidance';
 }
 
 function getSemanticToolValue() {
   if (tool === 'mask') return SEMANTIC_KEEPOUT;
   if (tool === 'speed') return getSpeedValue(speedPercent);
-  if (tool === 'stairs') return SEMANTIC_STAIRS;
+  if (tool === 'passable') return SEMANTIC_PASSABLE;
   if (tool === 'guidance') return SEMANTIC_GUIDANCE;
   return null;
 }
@@ -517,7 +517,7 @@ function drawLabel(ctx, x, y, text) {
 function getPreviewStrokeColor() {
   if (tool === 'mask') return 'rgba(190, 50, 50, 0.85)';
   if (tool === 'speed') return 'rgba(190, 170, 40, 0.85)';
-  if (tool === 'stairs') return 'rgba(50, 120, 190, 0.9)';
+  if (tool === 'passable') return 'rgba(50, 120, 190, 0.9)';
   if (tool === 'guidance') return 'rgba(40, 150, 60, 0.85)';
   if (tool === 'erase') return 'rgba(255, 255, 255, 0.85)';
   if (tool === 'unscan') return 'rgba(205, 205, 205, 0.9)';
@@ -527,7 +527,7 @@ function getPreviewStrokeColor() {
 function getPreviewFillColor() {
   if (tool === 'mask') return 'rgba(190, 50, 50, 0.3)';
   if (tool === 'speed') return 'rgba(190, 170, 40, 0.3)';
-  if (tool === 'stairs') return 'rgba(50, 120, 190, 0.3)';
+  if (tool === 'passable') return 'rgba(50, 120, 190, 0.3)';
   if (tool === 'guidance') return 'rgba(40, 150, 60, 0.3)';
   if (tool === 'erase') return 'rgba(255, 255, 255, 0.25)';
   if (tool === 'unscan') return 'rgba(205, 205, 205, 0.25)';
@@ -746,7 +746,7 @@ function redrawMask() {
   var vis = {
     keepout: $('#showKeepout').prop('checked'),
     speed: $('#showSpeed').prop('checked'),
-    stairs: $('#showStairs').prop('checked'),
+    passable: $('#showPassable').prop('checked'),
     guidance: $('#showGuidance').prop('checked')
   };
   for (var i = 0; i < w * h; i++) {
@@ -801,11 +801,17 @@ function downloadFilterMask(filterType) {
   if (!pgm || !yamlObj || !semanticMask) { alert('Load YAML and PGM first.'); return; }
   var len = pgm.width * pgm.height;
   var pixels = new Uint8ClampedArray(len);
-  var freeVal = (filterType === 'speed') ? 255 : 254;
+  var freeVal = (filterType === 'speed') ? 255 : (filterType === 'passable' || filterType === 'guidance') ? 0 : 254;
   for (var i = 0; i < len; i++) {
     var zone = S.getSemanticZoneType(semanticMask[i]);
     if (zone === filterType) {
-      pixels[i] = (filterType === 'speed') ? 255 - Math.round(semanticMask[i] * 255 / 100) : semanticMask[i];
+      if (filterType === 'speed') {
+        pixels[i] = 255 - Math.round(semanticMask[i] * 255 / 100);
+      } else if (filterType === 'passable' || filterType === 'guidance') {
+        pixels[i] = 254;
+      } else {
+        pixels[i] = semanticMask[i];
+      }
     } else {
       pixels[i] = freeVal;
     }
@@ -837,7 +843,7 @@ $('#btnDownloadSemantic').on('click', function() {
 $('#dlFilterAll').on('click', function(e) { e.preventDefault(); $('#btnDownloadSemantic').click(); });
 $('#dlFilterKeepout').on('click', function(e) { e.preventDefault(); downloadFilterMask('keepout'); });
 $('#dlFilterSpeed').on('click', function(e) { e.preventDefault(); downloadFilterMask('speed'); });
-$('#dlFilterStairs').on('click', function(e) { e.preventDefault(); downloadFilterMask('stairs'); });
+$('#dlFilterPassable').on('click', function(e) { e.preventDefault(); downloadFilterMask('passable'); });
 $('#dlFilterGuidance').on('click', function(e) { e.preventDefault(); downloadFilterMask('guidance'); });
 
 })();
